@@ -8,6 +8,8 @@ from random import uniform
 import numpy as np
 import matplotlib.pyplot as plt
 import yfinance as yf
+from pandas import DataFrame
+from format import ohlc_data
 
 
 def swings_detection(data, order: int):
@@ -71,7 +73,7 @@ def swing_high(data, order: int):
                 swing_highs_indexes.append(i)
     return swing_highs_indexes
 
-def important_points_recogn_vert(data, n_points: int):
+def important_points_recogn_vert(data: DataFrame, n_points: int):
     """_summary_
 
     Args:
@@ -81,15 +83,13 @@ def important_points_recogn_vert(data, n_points: int):
     Returns:
         _type_: _description_
     """
-    important_points_indexes = [0, len(data)- 1]
+    important_points_indexes = [0, len(data) - 1]
 
-    a_1 = (data[-1] - data[0]) / (len(data)-1)
-    a_2 = data[0]
+    a_1 = (data["Close"][-1] - data["Close"][0]) / (len(data)-1)
+    a_2 = data["Close"][0]
 
     trend_line = [a_1 * i + a_2 for i in range(len(data))]
-    print(trend_line)
-    distance = [abs(data[i] - trend_line[i]) for i in range(len(data))]
-    print(distance)
+    distance = [abs(data["Close"][i] - trend_line[i]) for i in range(len(data))]
     for _ in range(n_points - 2):
         new_point_index = 1
         max_distance = distance[1]
@@ -102,11 +102,10 @@ def important_points_recogn_vert(data, n_points: int):
         important_points_indexes.sort()
         for i in range(len(important_points_indexes)-1):
             start, end = important_points_indexes[i], important_points_indexes[i+1]
-            a_1 = (data[end] - data[start]) / (end - start)
-            a_2 = data[start] - a_1 * start
+            a_1 = (data["Close"][end] - data["Close"][start]) / (end - start)
+            a_2 = data["Close"][start] - a_1 * start
             trend_line[start:end] = [a_1 * j + a_2 for j in range(start, end)]
-        print(trend_line)
-        distance = [abs(data[i] - trend_line[i]) for i in range(len(data))]
+        distance = [abs(data["Close"][i] - trend_line[i]) for i in range(len(data))]
 
     return important_points_indexes
 
@@ -179,3 +178,11 @@ def important_points_recogn_perc_diff(data, max_diff = 5):
         distance = [abs(data[i] - trend_line[i]) for i in range(len(data))]
         diff = [100 * distance[i] / trend_line[i] for i in range(len(data))]
     return important_points_indexes
+
+if __name__ == "__main__":
+    history = ohlc_data("EURUSD", "2023-01-01")
+    plt.plot(list(history['Close']))
+    l1 = important_points_recogn_vert(history, 12)
+    l2 = [history['Close'][i] for i in l1]
+    plt.plot(l1, l2)
+    plt.show()
