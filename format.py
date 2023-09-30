@@ -7,7 +7,7 @@
 import yfinance as yf
 
 
-def ohlc_data(symbol: str, start: str, timeframe="1d",):
+def ohlc_data(symbol: str, start: str, timeframe="1h",):
     """Returns the ohlc data of symbol in the timeframe wanted from a specific start date.
 
     Args:
@@ -18,11 +18,16 @@ def ohlc_data(symbol: str, start: str, timeframe="1d",):
     Returns:
         pandas.Dataframe : dataframe containing the requested ohlc data
     """
-    ticker = yf.Ticker(ticker=f"{symbol}=X")
+    ticker = yf.Ticker(ticker=symbol)
     history = ticker.history(period=timeframe, start=start)
-    history = history.drop(labels=["Volume", "Dividends", "Stock Splits"], axis=1)
+    useless_infos = ["Volume", "Dividends", "Stock Splits"]
+    for info in useless_infos:
+        if info in history.keys():
+            history = history.drop(labels=[info], axis=1)
     return history
 
+
 if __name__ == "__main__":
-    hist = ohlc_data("EURUSD", "2023-01-01")
+    hist = ohlc_data("AMZN", "2023-01-01")
+    print(hist)
     print(len(hist))
